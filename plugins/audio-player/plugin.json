@@ -1,14 +1,20 @@
 {
   "id": "audio-player",
   "name": "Audio player",
-  "version": "1.0.1",
-  "apiVersion": 2,
-  "description": "Plays music from a folder on your machine, with a transport in the chat window. The model can start a track, skip, pause and say what is on.",
+  "version": "1.1.0",
+  "apiVersion": 3,
+  "description": "Plays music from a folder on your machine, with a transport in the chat window. The model can start a track, build a playlist, skip and pause — and offers a list to click when several files could be what you meant.",
   "author": "alexbeatnik",
   "main": "main.mjs",
   "icon": "icon.svg",
-  "actions": ["play_music", "music_control"],
-  "services": ["audio"],
+  "actions": [
+    "play_music",
+    "queue_music",
+    "music_control"
+  ],
+  "services": [
+    "audio"
+  ],
   "settings": [
     {
       "key": "library",

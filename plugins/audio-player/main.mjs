@@ -48,6 +48,24 @@ that answer names some of what IS there, so offer one of those. Only when the
 user then asks for something the library does not hold is the browser the right
 tool.
 
+When several tracks could be what they meant, you are told so and the user is
+shown the list to pick from. Say that you found more than one and that they can
+choose — do NOT pick for them, and do not read the list out: it is already on
+their screen, with a button on each line.
+
+PLAYLIST — {"type":"queue_music","steps":"<what to gather>"}
+
+For "play everything by X", "make a playlist of Y", "put on some Z". It queues
+every track that matches instead of asking which one, and starts playing. Add
+" | shuffle" to the end of "steps" to start it in a random order:
+
+\`\`\`action
+{"type":"queue_music","steps":"pearl jam | shuffle"}
+\`\`\`
+
+Use play_music for one song and queue_music for a set of them. Asking which of
+forty tracks was meant is the wrong question when somebody asked for all forty.
+
 {"type":"music_control","steps":"<command>"} controls what is already playing.
 The commands are: pause, resume, next, previous, stop, shuffle on, shuffle off,
 repeat all, repeat one, repeat off, what is playing.
@@ -57,6 +75,13 @@ the queue unless you are asked for it.`;
 
 /** How many tracks to name when reporting back to the model. */
 const NAMED_IN_FEEDBACK = 5;
+/**
+ * How many near-matches to put on screen.
+ *
+ * A list long enough to scroll is not a choice, it is a second search. Beyond
+ * this the user is better served by narrowing what they asked for.
+ */
+const MAX_CHOICES = 8;
 
 export function activate(ctx) {
   const audio = ctx.service('audio');
@@ -71,6 +96,20 @@ export function activate(ctx) {
   let index = -1;
   let shuffle = false;
   let repeat = 'all';
+  /**
+   * The last set of near-matches put in front of the user, and its identity.
+   *
+   * Kept so a click can be answered minutes later: the turn that offered them
+   * finished long ago, and the button carries only a position in this list.
+   *
+   * The token is what makes an *old* list safe. A second search replaces this
+   * one, and the buttons of the first are still on screen and still clickable —
+   * with a bare index they would quietly pick from the newer list, playing
+   * something the user never saw offered. The id carries the token, so a stale
+   * click is refused in words instead.
+   */
+  let offered = { token: '', tracks: [] };
+  let offerCount = 0;
 
   const folder = () => String(ctx.store.get('library', '') || '').trim();
 
@@ -95,7 +134,7 @@ export function activate(ctx) {
         throw new Error(`the music folder cannot be read — ${err.message}`);
       }
       const paths = await scanFolder(dir);
-      library = paths.map(trackFor);
+      library = paths.map((file) => trackFor(file, dir));
       scanned = dir;
       ctx.log(`${library.length} track(s) under ${dir}`);
       return library;
@@ -104,6 +143,22 @@ export function activate(ctx) {
     });
 
     return scanning;
+  }
+
+  /** Queue a set and start it, reporting what the model should say. */
+  function start(tracks, what) {
+    queue = tracks;
+    index = 0;
+    cue();
+    const named = tracks.slice(0, NAMED_IN_FEEDBACK).map((track) => track.title).join(', ');
+    return {
+      ok: true,
+      summary: `${tracks[0].title}${tracks.length > 1 ? ` (+${tracks.length - 1} queued)` : ''}`,
+      feedback:
+        `[MUSIC] Now playing "${tracks[0].title}"${tracks[0].artist ? ` by ${tracks[0].artist}` : ''}` +
+        `${tracks.length > 1 ? `, with ${tracks.length} track(s) queued: ${named}` : ''}. ` +
+        `That is what "${what}" resolved to. Say what is playing in one short sentence.`,
+    };
   }
 
   /** Hand the current track to the app, with the words the bar should show. */
@@ -116,7 +171,9 @@ export function activate(ctx) {
       {
         path: track.path,
         label: track.title,
-        sublabel: [track.album, position, flags].filter(Boolean).join(' · '),
+        // Artist first: with no tags it is the only place a band name appears,
+        // and it is what tells two versions of the same song apart.
+        sublabel: [track.artist, track.album, position, flags].filter(Boolean).join(' · '),
       },
       { play },
     );
@@ -203,15 +260,95 @@ export function activate(ctx) {
         };
       }
 
-      queue = hits;
+      // Asked for one song and finding several, the honest answer is to ask.
+      // A model choosing between "Elderly Woman Behind the Counter in a Small
+      // Town" and the live recording of it is guessing, and the user is the
+      // only one who knows which they meant — so they get the list, with a
+      // button on each line, and nothing starts playing until they press one.
+      if (!wanted) {
+        // Nothing asked for means everything: that is not an ambiguity.
+        return start(hits, `everything — ${hits.length} track(s)`);
+      }
+      if (hits.length === 1) return start(hits, hits[0].title);
+
+      offerCount += 1;
+      offered = { token: `o${offerCount}`, tracks: hits.slice(0, MAX_CHOICES) };
+      return {
+        ok: true,
+        summary: `${hits.length} possible match(es) for "${wanted}"`,
+        choices: offered.tracks.map((track, position) => ({
+          id: `${offered.token}:${position}`,
+          label: track.title,
+          note: [track.artist, track.album].filter(Boolean).join(' · '),
+          title: track.path,
+        })),
+        feedback:
+          `[MUSIC] ${hits.length} track(s) could be "${wanted}", so nothing is playing yet and the user has been ` +
+          'shown the list with a button on each line. Tell them there is more than one and to pick — do not choose ' +
+          'for them, and do not repeat the list, it is already on their screen.',
+      };
+    },
+
+    /**
+     * One of those buttons was pressed.
+     *
+     * The rest of the offered set is queued behind the chosen track rather than
+     * discarded: somebody who wanted the second of five versions is quite
+     * likely to want the third next.
+     */
+    choose: async (choiceId) => {
+      const [token, rawPosition] = String(choiceId).split(':');
+      if (token !== offered.token) throw new Error('that list is no longer the current one');
+
+      const position = Number(rawPosition);
+      const picked = offered.tracks[position];
+      if (!picked) throw new Error('that list is no longer the current one');
+
+      queue = [picked, ...offered.tracks.filter((_, at) => at !== position)];
       index = 0;
+      cue();
+      return { ok: true, summary: picked.title };
+    },
+  });
+
+  ctx.action({
+    type: 'queue_music',
+    run: async (steps, turn) => {
+      turn.status('Building a playlist…');
+      const tracks = await ensureLibrary();
+
+      // `| shuffle` rather than looking for the word anywhere: a band called
+      // Random Order would otherwise be unplayable in order, and the model is
+      // told exactly what to write.
+      const [rawQuery = '', ...modifiers] = String(steps ?? '').split('|');
+      const wanted = rawQuery.trim();
+      const wantsShuffle = modifiers.some((modifier) => /shuffle|random/i.test(modifier));
+
+      const hits = wanted ? search(tracks, wanted) : tracks;
+      if (hits.length === 0) {
+        return {
+          ok: false,
+          summary: `nothing matches "${wanted}"`,
+          feedback: `[MUSIC] Nothing in the library matches "${wanted}", so there is no playlist to build. Say so, and ask what they meant.`,
+        };
+      }
+
+      shuffle = wantsShuffle;
+      // Shuffled means starting somewhere random too. Starting at track one and
+      // only then shuffling makes the same song open every "random" playlist.
+      const first = wantsShuffle ? Math.floor(Math.random() * hits.length) : 0;
+      queue = hits;
+      index = first;
       cue();
 
       const named = hits.slice(0, NAMED_IN_FEEDBACK).map((track) => track.title).join(', ');
       return {
         ok: true,
-        summary: `${hits[0].title} (+${hits.length - 1} queued)`,
-        feedback: `[MUSIC] Now playing "${hits[0].title}"${hits[0].album ? ` from ${hits[0].album}` : ''}, with ${hits.length} track(s) queued: ${named}${hits.length > NAMED_IN_FEEDBACK ? ', …' : ''}. Say what is playing in one short sentence.`,
+        summary: `${hits.length} track(s)${wantsShuffle ? ', shuffled' : ''} — now ${hits[first].title}`,
+        feedback:
+          `[MUSIC] Queued ${hits.length} track(s)${wantsShuffle ? ' in random order' : ''} for "${wanted || 'everything'}", ` +
+          `now playing "${hits[first].title}". It includes: ${named}${hits.length > NAMED_IN_FEEDBACK ? ', …' : ''}. ` +
+          'Say how many are queued and what is playing, in one short sentence.',
       };
     },
   });
