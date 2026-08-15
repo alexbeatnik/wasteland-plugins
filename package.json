@@ -1,0 +1,11 @@
+{
+  "name": "wasteland-plugins",
+  "private": true,
+  "type": "module",
+  "description": "Plugins for Wasteland Next, and the index the app installs them from.",
+  "license": "Apache-2.0",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "index": "node scripts/build-index.mjs"
+  }
+}

@@ -8,7 +8,7 @@ where they are switched on and off and where an **UPDATE** button shows up when 
 
 | Plugin | What it adds |
 |---|---|
-| [`audio-player`](plugins/audio-player) | Plays music from a folder on your machine, with a transport bar in the chat window. The model can start a track, skip, pause and say what is on. |
+| [`audio-player`](plugins/audio-player) | Plays music from a folder on your machine, with a transport bar in the chat window. Reads ID3 and Vorbis tags, so it knows who performed a track even when the file name does not say. The model can start a song, build a playlist, skip and pause — and when several files could be what you meant, you get a list to click. |
 | [`phosphor-themes`](plugins/phosphor-themes) | Three other screens: green phosphor, a cold cyan tube, and a paper-white daylight look with the glow switched off. |
 
 ## Two kinds of plugin
@@ -113,6 +113,20 @@ A theme redefines the variables on `:root` and nothing else. It is loaded after 
 specificity wins on order and no `!important` is ever needed; overriding a *selector* works until the app adds a rule.
 See [`green.css`](plugins/phosphor-themes/themes/green.css) for the full set of variables worth setting —
 [`paper.css`](plugins/phosphor-themes/themes/paper.css) is the exception that also touches `.crt`, and says why.
+
+## Tests
+
+```bash
+npm test
+```
+
+Runs against `tests/*.test.mjs` in plain Node — no dependencies, because the repository has none. The tag readers are
+what these exist for: a binary parser fails silently, putting a wrong artist on screen rather than throwing, and the
+release workflow will not publish until they pass.
+
+A plugin cannot have `node_modules` — the app imports it by path — so anything it needs is written out here. That is
+why `audio-player` carries its own ID3 and Vorbis reader instead of depending on `music-metadata`, and why it is worth
+testing rather than trusting.
 
 ## Publishing
 

@@ -12,6 +12,7 @@
  */
 import { readdir, realpath, stat } from 'node:fs/promises';
 import { basename, dirname, extname, join } from 'node:path';
+import { readTags, trackNumber } from './tags.mjs';
 
 export const AUDIO_EXTENSIONS = new Set(['mp3', 'flac', 'ogg', 'oga', 'opus', 'm4a', 'm4b', 'aac', 'wav', 'webm', 'weba']);
 
@@ -137,6 +138,45 @@ export function trackFor(path, root = '') {
   }
 
   return { path, title, album, artist };
+}
+
+/**
+ * Read what the files themselves say, over what their paths suggested.
+ *
+ * A tag wins wherever it exists, and the path stands in wherever it does not —
+ * so a tagged library reads correctly, an untagged one behaves exactly as it
+ * did before this existed, and the common half-tagged case gets the best of
+ * both. The track number is kept because it is the only honest way to order an
+ * album whose files are named by title alone.
+ *
+ * Read in batches: one at a time is far too slow across hundreds of files, and
+ * all at once exhausts the file descriptors. The reads are small — the head of
+ * each file, never the audio.
+ */
+export async function readTracks(paths, root = '', concurrency = 12) {
+  const tracks = new Array(paths.length);
+  let cursor = 0;
+
+  const worker = async () => {
+    while (cursor < paths.length) {
+      const index = cursor;
+      cursor += 1;
+      const path = paths[index];
+      const base = trackFor(path, root);
+      const tags = await readTags(path);
+      tracks[index] = {
+        ...base,
+        title: tags.title || base.title,
+        artist: tags.artist || tags.albumArtist || base.artist,
+        album: tags.album || base.album,
+        trackNo: trackNumber(tags.track),
+        tagged: Boolean(tags.title || tags.artist || tags.album),
+      };
+    }
+  };
+
+  await Promise.all(Array.from({ length: Math.min(concurrency, paths.length) }, worker));
+  return tracks;
 }
 
 /**

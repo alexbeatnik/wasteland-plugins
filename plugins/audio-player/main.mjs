@@ -13,7 +13,7 @@
  * has no queue at all.
  */
 import { stat } from 'node:fs/promises';
-import { scanFolder, search, trackFor } from './library.mjs';
+import { readTracks, scanFolder, search } from './library.mjs';
 
 /**
  * What the model is told.
@@ -134,9 +134,14 @@ export function activate(ctx) {
         throw new Error(`the music folder cannot be read — ${err.message}`);
       }
       const paths = await scanFolder(dir);
-      library = paths.map((file) => trackFor(file, dir));
+      // Tags are read here, once per folder, rather than per search: it is the
+      // difference between knowing who performed a track and guessing from its
+      // file name, and on a library with no folder structure it is the only
+      // difference there is.
+      library = await readTracks(paths, dir);
       scanned = dir;
-      ctx.log(`${library.length} track(s) under ${dir}`);
+      const tagged = library.filter((track) => track.tagged).length;
+      ctx.log(`${library.length} track(s) under ${dir}, ${tagged} with tags`);
       return library;
     })().finally(() => {
       scanning = null;

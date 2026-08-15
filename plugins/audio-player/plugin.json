@@ -1,9 +1,9 @@
 {
   "id": "audio-player",
   "name": "Audio player",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "apiVersion": 3,
-  "description": "Plays music from a folder on your machine, with a transport in the chat window. The model can start a track, build a playlist, skip and pause — and offers a list to click when several files could be what you meant.",
+  "description": "Plays music from a folder on your machine, with a transport in the chat window. Reads ID3 and Vorbis tags, so it knows who performed a track even when the file name does not say. The model can start a song, build a playlist, skip and pause — and offers a list to click when several files could be what you meant.",
   "author": "alexbeatnik",
   "main": "main.mjs",
   "icon": "icon.svg",

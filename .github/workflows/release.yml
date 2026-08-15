@@ -32,6 +32,11 @@ jobs:
         with:
           node-version: '22'
 
+      # A plugin that cannot parse a tag is worse than one that reads none:
+      # it puts a wrong artist on screen. Publishing waits on this.
+      - name: Test
+        run: npm test
+
       - name: Pack the plugins and build the index
         run: |
           node scripts/build-index.mjs \
