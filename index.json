@@ -12,7 +12,7 @@
       "kind": "code",
       "icon": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSJub25lIgogICAgIHN0cm9rZT0iI2ZmYjAwMCIgc3Ryb2tlLXdpZHRoPSIxLjgiIHN0cm9rZS1saW5lY2FwPSJzcXVhcmUiPgogIDwhLS0gQSBsZXZlbCBtZXRlciByYXRoZXIgdGhhbiBhIG5vdGU6IHRoZSBhcHAgdGludHMgaWNvbnMgdGhyb3VnaCBpdHMgb3duCiAgICAgICBwYWxldHRlLCBzbyBzdHJhaWdodCBzdHJva2VzIHN1cnZpdmUgdGhlIGZpbHRlciBiZXR0ZXIgdGhhbiBhIGZpbGxlZCBnbHlwaC4gLS0+CiAgPHBhdGggZD0iTTQgMTVWOU04IDE4VjZNMTIgMTZWOE0xNiAxOVY1TTIwIDE0VjEwIiAvPgo8L3N2Zz4K",
       "url": "https://github.com/alexbeatnik/wasteland-plugins/releases/download/plugins/audio-player-1.2.0.zip",
-      "sha256": "cd3dc2e96d1f0b259deb8c0454f2e6841db66d594e1771cfc319e297042f52bd",
+      "sha256": "6bce7f84dcfdb8b35e8f0d97f26c606d60627b632a8b121c5631673ef41cbd4f",
       "size": 14735
     },
     {
@@ -25,8 +25,21 @@
       "kind": "theme",
       "icon": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSJub25lIgogICAgIHN0cm9rZT0iI2ZmYjAwMCIgc3Ryb2tlLXdpZHRoPSIxLjgiIHN0cm9rZS1saW5lY2FwPSJzcXVhcmUiPgogIDwhLS0gQSB0dWJlIHdpdGggYSBoYWxmLWZpbGxlZCBmYWNlOiB0aGUgdGhlbWUgcGlja2VyJ3Mgam9iIGluIG9uZSBnbHlwaC4gLS0+CiAgPHJlY3QgeD0iMyIgeT0iNSIgd2lkdGg9IjE4IiBoZWlnaHQ9IjE0IiAvPgogIDxwYXRoIGQ9Ik0xMiA1djE0IiAvPgogIDxwYXRoIGQ9Ik0zIDVoOXYxNEgzeiIgZmlsbD0iI2ZmYjAwMCIgc3Ryb2tlPSJub25lIiBvcGFjaXR5PSIwLjM1IiAvPgo8L3N2Zz4K",
       "url": "https://github.com/alexbeatnik/wasteland-plugins/releases/download/plugins/phosphor-themes-1.0.0.zip",
-      "sha256": "79e62ded017f4fa5f273c66818e053ed6c0946ee8511f35fa6afc34dacd58d34",
+      "sha256": "50cda6724068f0e5a1fcdd0686d92baae10872f373f779b8900ab35eafb79493",
       "size": 2875
+    },
+    {
+      "id": "ukrainian",
+      "name": "Українська",
+      "version": "1.0.0",
+      "description": "The interface in Ukrainian. A dictionary and nothing else — no code, so nothing to approve.",
+      "author": "alexbeatnik",
+      "apiVersion": 3,
+      "kind": "theme",
+      "icon": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSJub25lIgogICAgIHN0cm9rZT0iI2ZmYjAwMCIgc3Ryb2tlLXdpZHRoPSIxLjgiIHN0cm9rZS1saW5lY2FwPSJzcXVhcmUiPgogIDwhLS0gQSB0dWJlIHdpdGggYSBoYWxmLWZpbGxlZCBmYWNlOiB0aGUgdGhlbWUgcGlja2VyJ3Mgam9iIGluIG9uZSBnbHlwaC4gLS0+CiAgPHJlY3QgeD0iMyIgeT0iNSIgd2lkdGg9IjE4IiBoZWlnaHQ9IjE0IiAvPgogIDxwYXRoIGQ9Ik0xMiA1djE0IiAvPgogIDxwYXRoIGQ9Ik0zIDVoOXYxNEgzeiIgZmlsbD0iI2ZmYjAwMCIgc3Ryb2tlPSJub25lIiBvcGFjaXR5PSIwLjM1IiAvPgo8L3N2Zz4K",
+      "url": "https://github.com/alexbeatnik/wasteland-plugins/releases/download/plugins/ukrainian-1.0.0.zip",
+      "sha256": "f34206a19f66f01a6fb55c0c101ac0f4c0aceb9dbd74a9bac2c552b74e581f8b",
+      "size": 3813
     }
   ]
 }
