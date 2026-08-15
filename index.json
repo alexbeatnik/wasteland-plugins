@@ -12,7 +12,7 @@
       "kind": "code",
       "icon": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSJub25lIgogICAgIHN0cm9rZT0iI2ZmYjAwMCIgc3Ryb2tlLXdpZHRoPSIxLjgiIHN0cm9rZS1saW5lY2FwPSJzcXVhcmUiPgogIDwhLS0gQSBsZXZlbCBtZXRlciByYXRoZXIgdGhhbiBhIG5vdGU6IHRoZSBhcHAgdGludHMgaWNvbnMgdGhyb3VnaCBpdHMgb3duCiAgICAgICBwYWxldHRlLCBzbyBzdHJhaWdodCBzdHJva2VzIHN1cnZpdmUgdGhlIGZpbHRlciBiZXR0ZXIgdGhhbiBhIGZpbGxlZCBnbHlwaC4gLS0+CiAgPHBhdGggZD0iTTQgMTVWOU04IDE4VjZNMTIgMTZWOE0xNiAxOVY1TTIwIDE0VjEwIiAvPgo8L3N2Zz4K",
       "url": "https://github.com/alexbeatnik/wasteland-plugins/releases/download/plugins/audio-player-1.2.0.zip",
-      "sha256": "6bce7f84dcfdb8b35e8f0d97f26c606d60627b632a8b121c5631673ef41cbd4f",
+      "sha256": "151fbaa87135cbd262d0aa156aecccd3028d4c3dc626eb8e8439cdbf039f5582",
       "size": 14735
     },
     {
@@ -25,21 +25,34 @@
       "kind": "theme",
       "icon": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSJub25lIgogICAgIHN0cm9rZT0iI2ZmYjAwMCIgc3Ryb2tlLXdpZHRoPSIxLjgiIHN0cm9rZS1saW5lY2FwPSJzcXVhcmUiPgogIDwhLS0gQSB0dWJlIHdpdGggYSBoYWxmLWZpbGxlZCBmYWNlOiB0aGUgdGhlbWUgcGlja2VyJ3Mgam9iIGluIG9uZSBnbHlwaC4gLS0+CiAgPHJlY3QgeD0iMyIgeT0iNSIgd2lkdGg9IjE4IiBoZWlnaHQ9IjE0IiAvPgogIDxwYXRoIGQ9Ik0xMiA1djE0IiAvPgogIDxwYXRoIGQ9Ik0zIDVoOXYxNEgzeiIgZmlsbD0iI2ZmYjAwMCIgc3Ryb2tlPSJub25lIiBvcGFjaXR5PSIwLjM1IiAvPgo8L3N2Zz4K",
       "url": "https://github.com/alexbeatnik/wasteland-plugins/releases/download/plugins/phosphor-themes-1.0.0.zip",
-      "sha256": "50cda6724068f0e5a1fcdd0686d92baae10872f373f779b8900ab35eafb79493",
+      "sha256": "30bc420bec7c992483aa7903368a4fb2df9552f4e906567912f3b2e54416ba45",
       "size": 2875
+    },
+    {
+      "id": "reminders",
+      "name": "Reminders",
+      "version": "1.0.0",
+      "description": "Ask to be reminded of something and it arrives as a notification when it comes due — daily and weekly ones too. Everything stays on this machine: no account, no calendar, nothing sent anywhere. If Wasteland Next was closed when one came round, it tells you what you missed the next time it starts.",
+      "author": "alexbeatnik",
+      "apiVersion": 4,
+      "kind": "code",
+      "icon": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSJub25lIgogICAgIHN0cm9rZT0iI2ZmYjAwMCIgc3Ryb2tlLXdpZHRoPSIxLjgiIHN0cm9rZS1saW5lY2FwPSJzcXVhcmUiPgogIDwhLS0gQSBjbG9jayByYXRoZXIgdGhhbiBhIGJlbGw6IHRoZSBhcHAgdGludHMgaWNvbnMgdGhyb3VnaCBpdHMgb3duIHBhbGV0dGUsCiAgICAgICBzbyBvcGVuIHN0cm9rZXMgc3Vydml2ZSB0aGUgZmlsdGVyIGJldHRlciB0aGFuIGEgZmlsbGVkIGdseXBoLCBhbmQgYSBiZWxsCiAgICAgICBpcyBtb3N0bHkgY3VydmUuIFRoZSBoYW5kcyByZWFkIGFzIGEgdGltZSBldmVuIGF0IDEuMXJlbS4gLS0+CiAgPGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iOCIgLz4KICA8cGF0aCBkPSJNMTIgN3Y1bDMuNSAyIiAvPgo8L3N2Zz4K",
+      "url": "https://github.com/alexbeatnik/wasteland-plugins/releases/download/plugins/reminders-1.0.0.zip",
+      "sha256": "e882013b84785b05091f5245db28757a34dd6ccdc3c4a362a23f1f1e640293b8",
+      "size": 10169
     },
     {
       "id": "ukrainian",
       "name": "Українська",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "The interface in Ukrainian. A dictionary and nothing else — no code, so nothing to approve.",
       "author": "alexbeatnik",
       "apiVersion": 3,
       "kind": "theme",
       "icon": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSJub25lIgogICAgIHN0cm9rZT0iI2ZmYjAwMCIgc3Ryb2tlLXdpZHRoPSIxLjgiIHN0cm9rZS1saW5lY2FwPSJzcXVhcmUiPgogIDwhLS0gQSB0dWJlIHdpdGggYSBoYWxmLWZpbGxlZCBmYWNlOiB0aGUgdGhlbWUgcGlja2VyJ3Mgam9iIGluIG9uZSBnbHlwaC4gLS0+CiAgPHJlY3QgeD0iMyIgeT0iNSIgd2lkdGg9IjE4IiBoZWlnaHQ9IjE0IiAvPgogIDxwYXRoIGQ9Ik0xMiA1djE0IiAvPgogIDxwYXRoIGQ9Ik0zIDVoOXYxNEgzeiIgZmlsbD0iI2ZmYjAwMCIgc3Ryb2tlPSJub25lIiBvcGFjaXR5PSIwLjM1IiAvPgo8L3N2Zz4K",
-      "url": "https://github.com/alexbeatnik/wasteland-plugins/releases/download/plugins/ukrainian-1.0.0.zip",
-      "sha256": "f34206a19f66f01a6fb55c0c101ac0f4c0aceb9dbd74a9bac2c552b74e581f8b",
-      "size": 3813
+      "url": "https://github.com/alexbeatnik/wasteland-plugins/releases/download/plugins/ukrainian-1.0.1.zip",
+      "sha256": "b226f4f89c7d18171ba24d3c2eab581b39be6c744513e2eac1d4baaac0abbf48",
+      "size": 3854
     }
   ]
 }
