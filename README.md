@@ -29,6 +29,11 @@ is why a plugin that wants to play audio asks the app for the `audio` service ra
 
 ## Writing one
 
+> **The complete reference is [docs/PLUGIN-API.md](https://github.com/alexbeatnik/WastelandNext/blob/main/docs/PLUGIN-API.md)
+> in the app's own repository** — every manifest field, every method on `ctx`, all five services, and a checklist. It
+> is kept beside the implementation so the two cannot drift. What follows here is the short version and the parts
+> specific to publishing in this repository.
+
 A plugin is a directory with a `plugin.json` and, if it does anything, an entry point:
 
 ```
