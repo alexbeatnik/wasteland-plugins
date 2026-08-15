@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none"
+     stroke="#ffb000" stroke-width="1.8" stroke-linecap="square">
+  <!-- A level meter rather than a note: the app tints icons through its own
+       palette, so straight strokes survive the filter better than a filled glyph. -->
+  <path d="M4 15V9M8 18V6M12 16V8M16 19V5M20 14V10" />
+</svg>

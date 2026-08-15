@@ -1,0 +1,60 @@
+# Publish every plugin, and the index that points at them.
+#
+# One rolling release tagged `plugins` rather than a tag per version: the app
+# reads `index.json` on `main`, and that file names the exact archive and its
+# checksum, so the tag is only a place to keep bytes. Archives are named with
+# their version, so an update never overwrites the file an older index points at.
+name: Publish plugins
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'plugins/**'
+      - 'scripts/build-index.mjs'
+      - '.github/workflows/release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-plugins
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Pack the plugins and build the index
+        run: |
+          node scripts/build-index.mjs \
+            --base-url=https://github.com/${{ github.repository }}/releases/download/plugins
+
+      - name: Upload the archives
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Created on the first run, reused after. `--clobber` is what makes a
+          # re-run of the same version replace its archive instead of failing.
+          gh release view plugins >/dev/null 2>&1 \
+            || gh release create plugins --title "Plugins" --notes "Archives the app installs from. The index on main points here."
+          gh release upload plugins dist/*.zip --clobber
+
+      - name: Commit the index
+        run: |
+          git config user.name  'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add index.json
+          # Nothing to commit is the ordinary outcome of a re-run, not a failure.
+          git diff --cached --quiet && echo 'index unchanged' && exit 0
+          # `paths` above does not include index.json, so this push cannot
+          # retrigger the workflow — the skip marker is belt and braces.
+          git commit -m 'Publish plugin index [skip ci]'
+          git push
