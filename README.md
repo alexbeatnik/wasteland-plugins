@@ -79,6 +79,7 @@ export function activate(ctx) {
 |---|---|
 | `ctx.action({type, run})` | An action the model may emit. `run(steps, turn)` returns `{ok, summary, feedback}`; `feedback` is what the model reads next turn. |
 | `ctx.prompt(text)` | The part of the system prompt that documents those actions. A plugin that is switched off contributes neither, so the prompt can never describe a tool that is not there. |
+
 | `ctx.context(fn)` | Text recomputed each turn and appended to the system prompt. Include your own heading. |
 | `ctx.onTurnStart(fn)` | Called once per user message. |
 | `ctx.service(name)` | `audio`, `browser` or `lookupBrowser` — whichever the manifest declared. |
@@ -88,6 +89,16 @@ export function activate(ctx) {
 
 `turn`, handed to `run`, has `signal` (an `AbortSignal` for Stop), `status(text)`, `log(text)` and
 `confirm({command})` — which puts the app's own approval dialog in front of the user and resolves to a boolean.
+
+### Say what your fragment prevents
+
+Write the refusal your action exists to end, and say plainly that it is wrong in this session. Local models are
+strongly disposed to explain what an assistant cannot do, and they will do it while holding the action that does it.
+`audio-player` shipped a fragment that described `play_music` accurately and never said "I can't play music" was
+false — and the first request to play a song got "I can't directly play music. However, I can search for it on
+YouTube", from a model that had the action in front of it. The app's own lookup section learned this earlier and names
+its refusal verbatim; a plugin's fragment has to do the same, especially where another section documents a plausible
+wrong answer. The browser section, right beside this one, carries a worked example of playing a song on YouTube.
 
 ### The `audio` service
 

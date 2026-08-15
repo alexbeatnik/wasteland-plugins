@@ -15,22 +15,45 @@
 import { stat } from 'node:fs/promises';
 import { scanFolder, search, trackFor } from './library.mjs';
 
+/**
+ * What the model is told.
+ *
+ * The first paragraph is not decoration. Asked to play a song, a model that
+ * holds this action still answers "I can't directly play music, but I can
+ * search YouTube for you" — it is describing a session it is not in, exactly as
+ * one answered "I have no access to real-time information" while holding the
+ * lookup action. The cure is the same one the app's lookup section already
+ * uses: name the refusal it is about to produce and say plainly that it is
+ * wrong here. Reaching for the browser instead is a live risk rather than a
+ * theoretical one, because the browser section sitting beside this one carries
+ * a worked example of playing a song on YouTube.
+ */
 const PROMPT = `
 MUSIC — {"type":"play_music","steps":"<what to play>"}
 
-Plays music from the user's own folder, through the player in the chat window.
-"steps" is what they asked for in their own words — a song, an album, a folder,
-or empty to play everything. Do not invent file names or paths; the plugin
-searches the library and picks.
+You CAN play music in this session. It plays out of the user's own speakers,
+from their own folder, through the player in the chat window. "I can't play
+music", "I can't directly play audio" and "I can only search for it" are all
+wrong here — this action is how you do it, and it costs one turn. Never offer
+to look a song up on YouTube instead of playing it.
+
+When the user asks for a song, reach for this FIRST, and do not ask permission
+to search their library: searching is what the action does. "steps" is what
+they asked for in their own words — a song, an album, an artist, a folder, or
+empty to play everything. Never invent a file name or a path.
+
+A title you do not recognise is still worth passing straight through. The
+library is theirs, not yours, and you are told plainly when nothing matched —
+that answer names some of what IS there, so offer one of those. Only when the
+user then asks for something the library does not hold is the browser the right
+tool.
 
 {"type":"music_control","steps":"<command>"} controls what is already playing.
 The commands are: pause, resume, next, previous, stop, shuffle on, shuffle off,
 repeat all, repeat one, repeat off, what is playing.
 
-Use these instead of the browser when the user wants THEIR music. Opening
-YouTube for a song they already own is not what they asked for. You are told
-what is now playing; say it in one short sentence and do not list the queue
-unless asked.`;
+You are told what is now playing. Say it in one short sentence, and do not list
+the queue unless you are asked for it.`;
 
 /** How many tracks to name when reporting back to the model. */
 const NAMED_IN_FEEDBACK = 5;

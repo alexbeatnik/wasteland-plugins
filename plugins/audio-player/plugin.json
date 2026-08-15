@@ -1,7 +1,7 @@
 {
   "id": "audio-player",
   "name": "Audio player",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "apiVersion": 2,
   "description": "Plays music from a folder on your machine, with a transport in the chat window. The model can start a track, skip, pause and say what is on.",
   "author": "alexbeatnik",
