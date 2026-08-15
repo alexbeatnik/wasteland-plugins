@@ -1,7 +1,7 @@
 {
   "id": "ukrainian",
   "name": "Українська",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "apiVersion": 3,
   "description": "The interface in Ukrainian. A dictionary and nothing else — no code, so nothing to approve.",
   "author": "alexbeatnik",

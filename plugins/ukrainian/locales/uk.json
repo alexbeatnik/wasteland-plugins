@@ -43,6 +43,9 @@
 
   "PLUGINS": "ПЛАГІНИ",
   "GET PLUGINS": "ВЗЯТИ ПЛАГІНИ",
+  "[ FROM FILE… ]": "[ З ФАЙЛУ… ]",
+  "REGISTRIES": "РЕЄСТРИ",
+  "[ ADD ]": "[ ДОДАТИ ]",
   "BROWSER": "БРАУЗЕР",
   "Headless": "Без вікна",
   "CHROME PATH": "ШЛЯХ ДО CHROME",

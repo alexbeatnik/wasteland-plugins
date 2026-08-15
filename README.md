@@ -10,6 +10,8 @@ where they are switched on and off and where an **UPDATE** button shows up when 
 |---|---|
 | [`audio-player`](plugins/audio-player) | Plays music from a folder on your machine, with a transport bar in the chat window. Reads ID3 and Vorbis tags, so it knows who performed a track even when the file name does not say. The model can start a song, build a playlist, skip and pause — and when several files could be what you meant, you get a list to click. |
 | [`phosphor-themes`](plugins/phosphor-themes) | Three other screens: green phosphor, a cold cyan tube, and a paper-white daylight look with the glow switched off. |
+| [`reminders`](plugins/reminders) | Ask to be reminded of something and it arrives as a notification when it comes due — daily and weekly ones too. Everything stays on the machine: no account, no calendar, nothing sent anywhere. If the app was closed when one came round, it says what you missed the next time it starts. |
+| [`ukrainian`](plugins/ukrainian) | The interface in Ukrainian. A dictionary and nothing else — no code, so nothing to approve. |
 
 ## Two kinds of plugin
 
@@ -41,7 +43,7 @@ my-plugin/
   "id": "my-plugin",
   "name": "My plugin",
   "version": "1.0.0",
-  "apiVersion": 2,
+  "apiVersion": 4,
   "description": "One sentence, shown in the list.",
   "main": "main.mjs",
   "icon": "icon.svg",
@@ -82,9 +84,10 @@ export function activate(ctx) {
 
 | `ctx.context(fn)` | Text recomputed each turn and appended to the system prompt. Include your own heading. |
 | `ctx.onTurnStart(fn)` | Called once per user message. |
-| `ctx.service(name)` | `audio`, `browser` or `lookupBrowser` — whichever the manifest declared. |
+| `ctx.service(name)` | `audio`, `notify`, `browser` or `lookupBrowser` — whichever the manifest declared. |
 | `ctx.store.get(key)` | One of the settings declared in the manifest, as the user filled it in. |
 | `ctx.onSettingsChanged(fn)` | Called after they edit one. |
+| `ctx.state.get()` / `.set(obj)` | The plugin's own JSON document, for what nobody declares. |
 | `ctx.log(text)` | A line in the activity log. |
 
 `turn`, handed to `run`, has `signal` (an `AbortSignal` for Stop), `status(text)`, `log(text)` and
@@ -106,6 +109,46 @@ The app owns the `<audio>` element and the bar; the plugin owns everything that 
 label, sublabel})` puts a file in front of the user, `setTransport` says which buttons to draw and answers them, and
 `play` / `pause` / `clear` do what they say. There is no queue in the service on purpose: what "next" means is the
 plugin's business, and two plugins with different ideas can drive the same bar.
+
+### The `notify` service
+
+For the one message with no question in front of it. `notify.show({title, body, pluginId, desktop})` puts a card in the
+transcript *and* raises an operating system notification — neither is enough alone, since the first is invisible to
+somebody in another window and the second is gone the moment it is dismissed. Pass `desktop: false` for something
+raised while the window is opening anyway, such as a report of what was missed: a system notification for something the
+user is already looking at is noise.
+
+Notices raised before the window is listening are kept and shown on the way in, which is what makes "the app was closed
+when this came due" work at all. The plugin's *name* is not passed — it is resolved from `pluginId` where the notice is
+drawn, so a plugin cannot sign a message with a name other than the one on its own row. Six notices a minute from one
+plugin is the ceiling; past that they are dropped and the log says so.
+
+### `ctx.state` — the plugin's own document
+
+`ctx.store` is the user's answers to the questions the manifest asked, and every key in it is a control drawn on the
+plugin's row. A list of reminders is neither of those, so a plugin also gets one JSON document of its own, which the app
+never reads the inside of and which nothing declares:
+
+```js
+const held = ctx.state.get();                       // {} the first time
+ctx.state.set({ reminders: [...(held.reminders ?? []), one] });
+```
+
+It is written whole and renamed into place, and it lives outside the plugin's directory — that whole tree is replaced on
+every update, which would otherwise make updating a plugin the thing that loses your data. A megabyte is the ceiling.
+It is removed when the plugin is uninstalled: a user who pressed REMOVE said to remove it.
+
+### If your plugin uses a timer
+
+Hold it at module scope and clear it in `deactivate`. The host drops every contribution when a plugin is switched off,
+but nothing else knows about an interval — a switched-off plugin still raising notifications is the plainest possible
+way for its checkbox to be a lie. `reminders` also clears any previous one at the top of `activate`, because switching
+a plugin off and on again activates it a second time.
+
+Prefer one interval comparing wall-clock time against a stored moment over a `setTimeout` per event. A timeout for six
+hours' time is a promise about a process that will probably be restarted first, and it does not survive the machine
+sleeping — a laptop shut at 18:00 and opened at 20:00 owes an 18:45 reminder. A ticker pays it the moment something is
+watching again.
 
 ### Themes
 
