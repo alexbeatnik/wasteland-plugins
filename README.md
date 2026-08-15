@@ -11,6 +11,7 @@ where they are switched on and off and where an **UPDATE** button shows up when 
 | [`audio-player`](plugins/audio-player) | Plays music from a folder on your machine, with a transport bar in the chat window. Reads ID3 and Vorbis tags, so it knows who performed a track even when the file name does not say. The model can start a song, build a playlist, skip and pause — and when several files could be what you meant, you get a list to click. |
 | [`phosphor-themes`](plugins/phosphor-themes) | Three other screens: green phosphor, a cold cyan tube, and a paper-white daylight look with the glow switched off. |
 | [`reminders`](plugins/reminders) | Ask to be reminded of something and it arrives as a notification when it comes due — daily and weekly ones too. Everything stays on the machine: no account, no calendar, nothing sent anywhere. If the app was closed when one came round, it says what you missed the next time it starts. |
+| [`voice-input`](plugins/voice-input) | Speak instead of typing. Choose a Whisper model — small, medium or large — and it is downloaded once; a microphone button then appears beside Send, and what you say lands in the composer for you to check before sending. Runs whisper.cpp on your own machine: no audio leaves it. |
 | [`ukrainian`](plugins/ukrainian) | The interface in Ukrainian. A dictionary and nothing else — no code, so nothing to approve. |
 
 ## Two kinds of plugin
@@ -84,11 +85,17 @@ export function activate(ctx) {
 
 | `ctx.context(fn)` | Text recomputed each turn and appended to the system prompt. Include your own heading. |
 | `ctx.onTurnStart(fn)` | Called once per user message. |
-| `ctx.service(name)` | `audio`, `notify`, `browser` or `lookupBrowser` — whichever the manifest declared. |
+| `ctx.service(name)` | `audio`, `mic`, `notify`, `browser` or `lookupBrowser` — whichever the manifest declared. |
 | `ctx.store.get(key)` | One of the settings declared in the manifest, as the user filled it in. |
 | `ctx.onSettingsChanged(fn)` | Called after they edit one. |
 | `ctx.state.get()` / `.set(obj)` | The plugin's own JSON document, for what nobody declares. |
+| `ctx.dataDir()` | A directory of its own, for files too big to be a document. |
+| `ctx.progress(text, {received, total})` | A long job, drawn on the plugin's own row. `''` takes the line away. |
 | `ctx.log(text)` | A line in the activity log. |
+
+A setting may be `text`, `folder`, `toggle` or `select`. A `select` names its choices in the manifest —
+`"options": [{"value": "small", "label": "small — fastest"}]` — so the control can be drawn before any of your code has
+run, and the app refuses to store a value you never offered.
 
 `turn`, handed to `run`, has `signal` (an `AbortSignal` for Stop), `status(text)`, `log(text)` and
 `confirm({command})` — which puts the app's own approval dialog in front of the user and resolves to a boolean.
@@ -122,6 +129,21 @@ Notices raised before the window is listening are kept and shown on the way in, 
 when this came due" work at all. The plugin's *name* is not passed — it is resolved from `pluginId` where the notice is
 drawn, so a plugin cannot sign a message with a name other than the one on its own row. Six notices a minute from one
 plugin is the ceiling; past that they are dropped and the log says so.
+
+### The `mic` service
+
+The mirror of `audio`. The app owns the microphone button beside Send, the recording and the encoding; you get a
+finished 16 kHz mono WAV and return the words. Register with
+`mic.setTranscriber({pluginId, label, ready, transcribe})` and flip `mic.setReady(pluginId, ready)` when that changes.
+
+`ready` is what decides whether the button is drawn, and it means "there is a model on disk", not "this plugin is
+switched on" — a microphone that records into nothing is a dead control, and your row is where a model is obtained.
+The WAV is deleted as soon as `transcribe` returns, whether it returned a transcript or threw; anything you write
+beside it is yours to remove.
+
+Do not add a prompt fragment for dictation. Nothing the model can do changes — the text arrives in the composer
+exactly as if it had been typed — so describing a microphone it cannot operate spends context on a fact it can never
+act on, and invites it to offer to "listen".
 
 ### `ctx.state` — the plugin's own document
 
