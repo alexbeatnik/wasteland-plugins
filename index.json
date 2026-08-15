@@ -5,15 +5,15 @@
     {
       "id": "audio-player",
       "name": "Audio player",
-      "version": "1.1.0",
-      "description": "Plays music from a folder on your machine, with a transport in the chat window. The model can start a track, build a playlist, skip and pause — and offers a list to click when several files could be what you meant.",
+      "version": "1.2.0",
+      "description": "Plays music from a folder on your machine, with a transport in the chat window. Reads ID3 and Vorbis tags, so it knows who performed a track even when the file name does not say. The model can start a song, build a playlist, skip and pause — and offers a list to click when several files could be what you meant.",
       "author": "alexbeatnik",
       "apiVersion": 3,
       "kind": "code",
       "icon": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSJub25lIgogICAgIHN0cm9rZT0iI2ZmYjAwMCIgc3Ryb2tlLXdpZHRoPSIxLjgiIHN0cm9rZS1saW5lY2FwPSJzcXVhcmUiPgogIDwhLS0gQSBsZXZlbCBtZXRlciByYXRoZXIgdGhhbiBhIG5vdGU6IHRoZSBhcHAgdGludHMgaWNvbnMgdGhyb3VnaCBpdHMgb3duCiAgICAgICBwYWxldHRlLCBzbyBzdHJhaWdodCBzdHJva2VzIHN1cnZpdmUgdGhlIGZpbHRlciBiZXR0ZXIgdGhhbiBhIGZpbGxlZCBnbHlwaC4gLS0+CiAgPHBhdGggZD0iTTQgMTVWOU04IDE4VjZNMTIgMTZWOE0xNiAxOVY1TTIwIDE0VjEwIiAvPgo8L3N2Zz4K",
-      "url": "https://github.com/alexbeatnik/wasteland-plugins/releases/download/plugins/audio-player-1.1.0.zip",
-      "sha256": "17834b8dd543bc0c7c99517fbbbdcd6b693557eb2cf4ea510848f98dbd149f83",
-      "size": 10311
+      "url": "https://github.com/alexbeatnik/wasteland-plugins/releases/download/plugins/audio-player-1.2.0.zip",
+      "sha256": "cd3dc2e96d1f0b259deb8c0454f2e6841db66d594e1771cfc319e297042f52bd",
+      "size": 14735
     },
     {
       "id": "phosphor-themes",
@@ -25,7 +25,7 @@
       "kind": "theme",
       "icon": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSJub25lIgogICAgIHN0cm9rZT0iI2ZmYjAwMCIgc3Ryb2tlLXdpZHRoPSIxLjgiIHN0cm9rZS1saW5lY2FwPSJzcXVhcmUiPgogIDwhLS0gQSB0dWJlIHdpdGggYSBoYWxmLWZpbGxlZCBmYWNlOiB0aGUgdGhlbWUgcGlja2VyJ3Mgam9iIGluIG9uZSBnbHlwaC4gLS0+CiAgPHJlY3QgeD0iMyIgeT0iNSIgd2lkdGg9IjE4IiBoZWlnaHQ9IjE0IiAvPgogIDxwYXRoIGQ9Ik0xMiA1djE0IiAvPgogIDxwYXRoIGQ9Ik0zIDVoOXYxNEgzeiIgZmlsbD0iI2ZmYjAwMCIgc3Ryb2tlPSJub25lIiBvcGFjaXR5PSIwLjM1IiAvPgo8L3N2Zz4K",
       "url": "https://github.com/alexbeatnik/wasteland-plugins/releases/download/plugins/phosphor-themes-1.0.0.zip",
-      "sha256": "7d5f285d4fa7b42495e71b0a887a695692a659d9473f5baf92373f2abfead4a8",
+      "sha256": "79e62ded017f4fa5f273c66818e053ed6c0946ee8511f35fa6afc34dacd58d34",
       "size": 2875
     }
   ]
