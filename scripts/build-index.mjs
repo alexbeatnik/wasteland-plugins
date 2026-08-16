@@ -49,6 +49,55 @@ function sha256(path) {
   return createHash('sha256').update(readFileSync(path)).digest('hex');
 }
 
+/**
+ * Make a zip, with whatever this machine has.
+ *
+ * `zip(1)` is not present on a stock Windows box, and this script previously
+ * assumed it — which made the index unbuildable on the machine the plugins are
+ * written on. The same problem `extractors()` in the app solves from the other
+ * end, and the same answer: name the System32 path explicitly rather than
+ * trusting `tar` on PATH. Windows ships bsdtar there, which writes zip; a
+ * machine with Git installed usually resolves a bare `tar` to Git's GNU tar
+ * first, and GNU tar cannot write zip at all.
+ */
+function makeZip(dir, archive) {
+  rmSync(archive, { force: true });
+
+  const bsdtar = join(process.env['SystemRoot'] ?? 'C:\\Windows', 'System32', 'tar.exe');
+  const attempts = [
+    process.platform === 'win32' && existsSync(bsdtar)
+      ? { file: bsdtar, args: ['-a', '-c', '-f', archive, '-C', dir, '.'] }
+      : null,
+    { file: 'zip', args: ['-qr', archive, '.', '-x', '.*'], cwd: dir },
+    // PowerShell's own, for a Windows box with neither. `-Path dir\*` packs the
+    // contents rather than the directory, which is what puts `plugin.json` at
+    // the root of the archive where the app looks for it. Never interpolated
+    // straight in: a checkout under a path with an apostrophe in it would close
+    // the string early and pack the wrong thing, or nothing.
+    process.platform === 'win32'
+      ? {
+          file: 'powershell',
+          args: [
+            '-NoProfile',
+            '-Command',
+            `Compress-Archive -Path '${dir.replace(/'/g, "''")}\\*' -DestinationPath '${archive.replace(/'/g, "''")}' -Force`,
+          ],
+        }
+      : null,
+  ].filter(Boolean);
+
+  const failures = [];
+  for (const attempt of attempts) {
+    try {
+      execFileSync(attempt.file, attempt.args, { cwd: attempt.cwd, stdio: ['ignore', 'inherit', 'pipe'] });
+      if (existsSync(archive)) return attempt.file;
+    } catch (err) {
+      failures.push(`${attempt.file}: ${err.message.split('\n')[0]}`);
+    }
+  }
+  throw new Error(`nothing here can write a zip —\n  ${failures.join('\n  ')}`);
+}
+
 rmSync(distRoot, { recursive: true, force: true });
 mkdirSync(distRoot, { recursive: true });
 
@@ -78,7 +127,7 @@ for (const name of readdirSync(pluginsRoot).sort()) {
   // Zipped from inside the plugin directory, so `plugin.json` sits at the root
   // of the archive rather than under a folder named after it. The app tolerates
   // one wrapper directory, but only because hand-made archives have one.
-  execFileSync('zip', ['-qr', archive, '.', '-x', '.*'], { cwd: dir, stdio: ['ignore', 'inherit', 'inherit'] });
+  const packer = makeZip(dir, archive);
 
   entries.push({
     id: manifest.id,
@@ -87,6 +136,16 @@ for (const name of readdirSync(pluginsRoot).sort()) {
     description: manifest.description ?? '',
     author: manifest.author ?? '',
     apiVersion: manifest.apiVersion ?? 1,
+    /**
+     * The heading it is listed under before it is installed.
+     *
+     * Copied out of the manifest into the index because the manifest is inside
+     * an archive nobody has downloaded, and the whole point of a heading is to
+     * help somebody decide whether to download it. Left out, the app files it
+     * under "other" — which is not an error anywhere and simply looks like the
+     * sections do not work.
+     */
+    category: manifest.category ?? '',
     // What the user is agreeing to run. A theme pack has no entry point, so it
     // is data the app reads itself and needs no approval; anything with `main`
     // is code.
@@ -97,7 +156,7 @@ for (const name of readdirSync(pluginsRoot).sort()) {
     size: statSync(archive).size,
   });
 
-  console.log(`packed ${archiveName} (${statSync(archive).size} bytes)`);
+  console.log(`packed ${archiveName} — ${statSync(archive).size} bytes, with ${packer}`);
 }
 
 writeFileSync(

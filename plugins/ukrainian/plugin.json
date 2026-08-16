@@ -1,13 +1,18 @@
 {
   "id": "ukrainian",
   "name": "Українська",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "apiVersion": 3,
+  "category": "language",
   "description": "The interface in Ukrainian. A dictionary and nothing else — no code, so nothing to approve.",
   "author": "alexbeatnik",
   "icon": "icon.svg",
   "locales": [
-    { "id": "uk", "name": "Українська", "file": "locales/uk.json" }
+    {
+      "id": "uk",
+      "name": "Українська",
+      "file": "locales/uk.json"
+    }
   ],
   "order": 70
 }

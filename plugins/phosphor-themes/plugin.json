@@ -1,15 +1,28 @@
 {
   "id": "phosphor-themes",
   "name": "Phosphor themes",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "apiVersion": 2,
+  "category": "appearance",
   "description": "Three other screens: P1 green phosphor, a cold cyan tube, and a paper-white daylight look with the glow turned off.",
   "author": "alexbeatnik",
   "icon": "icon.svg",
   "themes": [
-    { "id": "green", "name": "Green phosphor", "file": "themes/green.css" },
-    { "id": "ice", "name": "Ice", "file": "themes/ice.css" },
-    { "id": "paper", "name": "Paper", "file": "themes/paper.css" }
+    {
+      "id": "green",
+      "name": "Green phosphor",
+      "file": "themes/green.css"
+    },
+    {
+      "id": "ice",
+      "name": "Ice",
+      "file": "themes/ice.css"
+    },
+    {
+      "id": "paper",
+      "name": "Paper",
+      "file": "themes/paper.css"
+    }
   ],
   "order": 60
 }
