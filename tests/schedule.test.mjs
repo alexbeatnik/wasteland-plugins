@@ -68,6 +68,26 @@ test('an exact date is taken as written, and a past one is refused', () => {
   assert.match(past.reason, /already gone by/);
 });
 
+test('a date that is not on the calendar is refused, not rolled forward', () => {
+  // `new Date(2026, 1, 31)` is the 3rd of March and says nothing about it, so
+  // without a check "remind me on 2026-02-31" is accepted and then arrives
+  // three days after the date somebody typed. Being told the date is wrong is
+  // the better outcome by a distance.
+  const impossible = parseWhen('2026-02-31 09:00', NOW);
+  assert.equal(impossible.ok, false);
+  assert.match(impossible.reason, /not a day on the calendar/);
+
+  assert.equal(parseWhen('2026-04-31 09:00', NOW).ok, false, 'April has thirty days');
+  assert.equal(parseWhen('2027-02-29 09:00', NOW).ok, false, '2027 is not a leap year');
+  assert.equal(parseWhen('2026-13-01 09:00', NOW).ok, false, 'there is no thirteenth month');
+  assert.equal(parseWhen('2026-00-10 09:00', NOW).ok, false, 'nor a zeroth');
+
+  // The leap day that does exist is still a date, which is the half of this
+  // that a cruder "February has 28 days" check would get wrong.
+  assert.equal(parseWhen('2028-02-29 09:00', NOW).ok, true);
+  assert.equal(parseWhen('2026-08-31 09:00', NOW).ok, true);
+});
+
 test('daily and weekly carry the clock, not just the next moment', () => {
   const daily = parseWhen('daily 07:30', NOW);
   assert.equal(daily.repeat, 'daily');

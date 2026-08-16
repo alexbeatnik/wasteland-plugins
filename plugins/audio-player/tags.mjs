@@ -10,7 +10,8 @@
  * one file that happened to carry the band in its name and stopped.
  *
  * The scope is deliberately narrow: the four fields a listener searches by, out
- * of ID3v2 and Vorbis comments, which between them cover MP3 and FLAC. Anything
+ * of ID3v2 and Vorbis comments, which between them cover MP3, FLAC, Ogg Vorbis
+ * and Opus — every format here that keeps its metadata in the open. Anything
  * else reads as nothing and the caller falls back to the file name — which is
  * what it did before tags existed here, so an unsupported format loses nothing.
  */
@@ -20,8 +21,9 @@ import { open } from 'node:fs/promises';
  * How far into a file to look for tags.
  *
  * ID3v2 declares its own length and is read exactly; this bounds the *search*
- * for a FLAC comment block, which has no such promise. 256 KB is past any
- * reasonable comment block and short of reading artwork off 740 files.
+ * for a FLAC or Ogg comment block, neither of which makes that promise. 256 KB
+ * is past any reasonable comment block and short of reading artwork off 740
+ * files.
  */
 const MAX_TAG_BYTES = 256 * 1024;
 
@@ -179,6 +181,91 @@ export function parseVorbisComment(buffer) {
   return found;
 }
 
+/**
+ * The comment payload inside a header packet, or `null` if it is not one.
+ *
+ * Vorbis marks its headers with a type byte and the codec name after it; Opus
+ * uses a bare magic string and no type byte at all. Past the wrapper the two
+ * are the same list.
+ *
+ * Ogg FLAC — which `.oga` is occasionally — is not among them. Its comment
+ * packet is a raw FLAC metadata block, and the only thing to recognise it by is
+ * a leading byte of 4, which is a byte any audio packet may start with. Reading
+ * it would mean inventing an artist out of compressed audio now and again, and
+ * that is worse than the file name it falls back to.
+ */
+function commentsIn(packet) {
+  if (packet.length > 7 && packet[0] === 3 && packet.toString('latin1', 1, 7) === 'vorbis') {
+    return parseVorbisComment(packet.subarray(7));
+  }
+  if (packet.length > 8 && packet.toString('latin1', 0, 8) === 'OpusTags') {
+    return parseVorbisComment(packet.subarray(8));
+  }
+  return null;
+}
+
+/**
+ * Vorbis comments out of an Ogg stream — `.ogg`, `.oga` and `.opus`.
+ *
+ * The comments are the second packet of the stream, and the reason this is more
+ * than four lines is that a packet is not a page. Ogg cuts packets into
+ * 255-byte segments and spills them over page boundaries, so a comment block
+ * with any length to it — and one naming an album artist already has — arrives
+ * in pieces that have to be stitched back together before a single field can be
+ * read. Parsing page by page instead finds the first half of a vendor string
+ * and nothing else.
+ *
+ * A run of segments ends its packet at the first one shorter than 255 bytes,
+ * which is why a packet whose length is a whole multiple of 255 is terminated
+ * by a segment of zero.
+ */
+export function parseOgg(buffer) {
+  if (buffer.length < 27 || buffer.toString('latin1', 0, 4) !== 'OggS') return {};
+
+  let offset = 0;
+  /** Segments of a packet that ran off the end of the page before this one. */
+  let carried = [];
+
+  while (offset + 27 <= buffer.length && buffer.toString('latin1', offset, offset + 4) === 'OggS') {
+    const segments = buffer[offset + 26];
+    const table = offset + 27;
+    const body = table + segments;
+    if (body > buffer.length) break;
+
+    let pageBytes = 0;
+    for (let i = 0; i < segments; i += 1) pageBytes += buffer[table + i];
+
+    let start = body;
+    let run = 0;
+    for (let i = 0; i < segments; i += 1) {
+      const lacing = buffer[table + i];
+      run += lacing;
+      if (lacing === 255) continue;
+      // Only the head of the file was read, so the last page in it is usually
+      // cut in half. A packet running past that end is one nothing can finish.
+      if (start + run > buffer.length) return {};
+
+      carried.push(buffer.subarray(start, start + run));
+      const comments = commentsIn(carried.length === 1 ? carried[0] : Buffer.concat(carried));
+      if (comments) return comments;
+
+      carried = [];
+      start += run;
+      run = 0;
+    }
+
+    // Still open at the end of the page: the rest of it is on the next one.
+    if (run > 0) {
+      if (start + run > buffer.length) return {};
+      carried.push(buffer.subarray(start, start + run));
+    }
+    // A page carrying nothing still advances by its own 27-byte header, or this
+    // would not terminate.
+    offset = body + pageBytes;
+  }
+  return {};
+}
+
 /** Find the Vorbis comment block inside a FLAC header and parse it. */
 export function parseFlac(buffer) {
   if (buffer.length < 8 || buffer.toString('latin1', 0, 4) !== 'fLaC') return {};
@@ -205,7 +292,8 @@ export function parseFlac(buffer) {
  * What one file says about itself, or `{}`.
  *
  * Reads the head of the file only. For ID3 that is exact — the tag declares its
- * own length — and for FLAC it is bounded, because a comment block does not.
+ * own length — and for FLAC and Ogg it is bounded, because a comment block does
+ * not.
  * Never throws: a locked file, a truncated download or a format nobody here
  * knows is a track with no tags, not a failed scan.
  */
@@ -232,7 +320,13 @@ export async function readTags(path) {
       return parseFlac(buffer.subarray(0, read.bytesRead));
     }
 
-    // Ogg and MP4 keep their metadata behind a container this does not walk.
+    if (head.toString('latin1', 0, 4) === 'OggS') {
+      const buffer = Buffer.alloc(MAX_TAG_BYTES);
+      const read = await handle.read(buffer, 0, MAX_TAG_BYTES, 0);
+      return parseOgg(buffer.subarray(0, read.bytesRead));
+    }
+
+    // MP4 and its relatives keep their metadata in atoms this does not walk.
     // The file name is still there, and it is what every track had before.
     return {};
   } catch {

@@ -112,11 +112,22 @@ export function parseWhen(input, now = Date.now()) {
   // 2026-08-20 09:00 — an exact date.
   const exact = /^(\d{4})-(\d{2})-(\d{2})[ t](\d{1,2}):(\d{2})$/.exec(text);
   if (exact) {
-    const [, year, month, day, rawHour, rawMinute] = exact;
+    const [, rawYear, rawMonth, rawDay, rawHour, rawMinute] = exact;
+    const [year, month, day] = [Number(rawYear), Number(rawMonth), Number(rawDay)];
     const [hour, minute] = [Number(rawHour), Number(rawMinute)];
     if (!validClock(hour, minute)) return { ok: false, reason: `${rawHour}:${rawMinute} is not a time of day` };
-    const at = new Date(Number(year), Number(month) - 1, Number(day), hour, minute, 0, 0).getTime();
-    if (!Number.isFinite(at)) return { ok: false, reason: `"${input}" is not a date` };
+
+    // A day that is not on the calendar has to be caught here, because the Date
+    // constructor will not: it rolls the overflow forward, so `2026-02-31`
+    // becomes the 3rd of March and the reminder is silently set three days off
+    // the date that was asked for. Reading the components back is the only way
+    // to tell a date that was accepted from one that was rewritten.
+    const when = new Date(year, month - 1, day, hour, minute, 0, 0);
+    if (when.getFullYear() !== year || when.getMonth() !== month - 1 || when.getDate() !== day) {
+      return { ok: false, reason: `${rawYear}-${rawMonth}-${rawDay} is not a day on the calendar` };
+    }
+
+    const at = when.getTime();
     // Refused rather than quietly moved: a date in the past is a sum somebody
     // got wrong, and silently setting it for next year would be worse.
     if (at <= now) return { ok: false, reason: 'that moment has already gone by' };

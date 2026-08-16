@@ -1,7 +1,7 @@
 {
   "id": "voice-input",
   "name": "Voice input",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "apiVersion": 5,
   "description": "Speak instead of typing. Choose a Whisper model — small, medium or large — and it is downloaded once; a microphone button then appears beside Send, and what you say lands in the composer for you to check before sending. Runs whisper.cpp on your own machine: no audio leaves it.",
   "author": "alexbeatnik",
@@ -28,6 +28,7 @@
         { "value": "uk", "label": "Ukrainian" },
         { "value": "en", "label": "English" },
         { "value": "pl", "label": "Polish" },
+        { "value": "ru", "label": "Russian" },
         { "value": "de", "label": "German" },
         { "value": "fr", "label": "French" },
         { "value": "es", "label": "Spanish" }

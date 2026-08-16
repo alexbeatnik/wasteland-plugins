@@ -127,13 +127,19 @@ export function activate(ctx) {
   // button; `ready` stays false until a model is actually on disk.
   announce(false);
 
-  // A model chosen, a language changed, or a path typed in. The model is what
-  // has to be fetched; the rest take effect on the next recording by themselves,
-  // since both are read live.
+  // A model chosen, a language changed, or a path typed in. The model and the
+  // binary are what have to be fetched; the language takes effect on the next
+  // recording by itself, since the transcribe closure reads it live.
+  //
+  // Nothing is re-announced for a language change, and that is the point.
+  // `ready` is a claim that the button will work, so it may only ever be set
+  // from `provision`, which has been to the disk. Recomputing it here could
+  // only ask whether a model is *named* in the settings — which is true the
+  // instant one is picked from the list, before a byte of it has been
+  // downloaded, and would put the button up for a model that is not there.
   ctx.onSettingsChanged((key) => {
     if (key === 'binary') binary = '';
     if (key === 'model' || key === 'binary') return provision();
-    announce(Boolean(modelFor(chosen())));
     return undefined;
   });
 
