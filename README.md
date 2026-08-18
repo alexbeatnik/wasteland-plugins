@@ -203,6 +203,11 @@ testing rather than trusting.
 Push to `main`. [The workflow](.github/workflows/release.yml) packs every plugin into `<id>-<version>.zip`, uploads the
 archives to the rolling `plugins` release, and commits a regenerated `index.json` naming each archive and its SHA-256.
 
+It then takes the superseded archives off that release, since the index names one version per plugin and the app can
+install no other. Only versions older than the one the index names are deleted — never the archive just uploaded while
+the new index is still a commit away, and never anything belonging to a plugin the index no longer lists, which is
+reported instead. `KEEP_VERSIONS` in the workflow spares a few older ones per plugin if you would rather have them.
+
 The app refuses to install anything whose bytes do not match the published checksum, and refuses an archive holding a
 path that would unpack outside its own directory — so an entry added by hand, without the index regenerated, simply
 will not install. Bump the `version` in `plugin.json` to offer an update; the app compares numerically, so `1.10.0` is

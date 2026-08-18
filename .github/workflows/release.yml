@@ -4,6 +4,8 @@
 # reads `index.json` on `main`, and that file names the exact archive and its
 # checksum, so the tag is only a place to keep bytes. Archives are named with
 # their version, so an update never overwrites the file an older index points at.
+# The superseded ones are then taken off, because seven versions of a plugin the
+# app can only ever install one of is a wall of dead files that grows on every push.
 name: Publish plugins
 
 on:
@@ -63,3 +65,14 @@ jobs:
           # retrigger the workflow — the skip marker is belt and braces.
           git commit -m 'Publish plugin index [skip ci]'
           git push
+
+      # Last, and deliberately so: between the upload above and the commit above
+      # the published index still names the previous archive, and deleting it in
+      # that window would break installing for as long as the window lasts.
+      - name: Prune the superseded archives
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # Versions kept per plugin, newest first. The one the index names is
+          # kept whatever this says, so 1 means "only what is installable".
+          KEEP_VERSIONS: '1'
+        run: node scripts/prune-release.mjs
