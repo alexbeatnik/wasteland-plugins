@@ -253,3 +253,52 @@ export function search(tracks, query) {
     .sort((a, b) => b.score - a.score || a.track.title.localeCompare(b.track.title, 'en', { numeric: true }))
     .map((item) => item.track);
 }
+
+/**
+ * The same tracks in a random order.
+ *
+ * Fisher-Yates over a copy, because the gathered order is what "shuffle off"
+ * has to go back to. A permutation rather than a random pick per track is the
+ * whole of it: picking afresh each time plays the same song twice in five,
+ * leaves others unheard however long you listen, and makes "3 of 47" a lie.
+ */
+export function shuffled(tracks) {
+  const order = [...tracks];
+  for (let at = order.length - 1; at > 0; at -= 1) {
+    const other = Math.floor(Math.random() * (at + 1));
+    [order[at], order[other]] = [order[other], order[at]];
+  }
+  return order;
+}
+
+/**
+ * One album in its own running order, or null when the set is not one album.
+ *
+ * This is what lets a playlist be shuffled without shuffling a record. An
+ * album was sequenced by somebody; "everything by this band" was sequenced by
+ * `localeCompare`, and coming out alphabetically every single time is how a
+ * library of two hundred songs ends up sounding like one cassette.
+ *
+ * One album means one album name and one folder: two records called Greatest
+ * Hits by different bands are two records, and a soundtrack with a different
+ * artist on every line is still one.
+ */
+export function albumOrder(tracks) {
+  if (tracks.length < 2) return null;
+  const album = (tracks[0].album ?? '').trim().toLowerCase();
+  if (!album) return null;
+  const folder = dirname(tracks[0].path);
+  const oneRecord = tracks.every(
+    (track) => (track.album ?? '').trim().toLowerCase() === album && dirname(track.path) === folder,
+  );
+  if (!oneRecord) return null;
+
+  // Tagged track numbers first; where a ripper wrote none, the file names it
+  // wrote are the running order, and those collate numerically.
+  return [...tracks].sort((a, b) => {
+    const left = Number(a.trackNo) > 0 ? Number(a.trackNo) : Infinity;
+    const right = Number(b.trackNo) > 0 ? Number(b.trackNo) : Infinity;
+    if (left !== right) return left - right;
+    return a.path.localeCompare(b.path, 'en', { numeric: true });
+  });
+}

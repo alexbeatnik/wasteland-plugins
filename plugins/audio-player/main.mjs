@@ -13,7 +13,7 @@
  * has no queue at all.
  */
 import { stat } from 'node:fs/promises';
-import { readTracks, scanFolder, search } from './library.mjs';
+import { albumOrder, readTracks, scanFolder, search, shuffled } from './library.mjs';
 
 /**
  * What the model is told.
@@ -56,12 +56,16 @@ their screen, with a button on each line.
 PLAYLIST — {"type":"queue_music","steps":"<what to gather>"}
 
 For "play everything by X", "make a playlist of Y", "put on some Z". It queues
-every track that matches instead of asking which one, and starts playing. Add
-" | shuffle" to the end of "steps" to start it in a random order:
+every track that matches instead of asking which one, and starts playing.
+A playlist gathered from more than one album is shuffled without being asked —
+an album keeps the order it was sequenced in. So this is the whole call:
 
 \`\`\`action
-{"type":"queue_music","steps":"pearl jam | shuffle"}
+{"type":"queue_music","steps":"pearl jam"}
 \`\`\`
+
+Add " | in order" to the end of "steps" only when they ask for it in order,
+or " | shuffle" to shuffle an album too.
 
 Use play_music for one song and queue_music for a set of them. Asking which of
 forty tracks was meant is the wrong question when somebody asked for all forty.
@@ -93,6 +97,14 @@ export function activate(ctx) {
 
   /** What is queued now, and where in it we are. */
   let queue = [];
+  /**
+   * The same tracks in the order they were gathered.
+   *
+   * Kept beside the playing order because shuffling is a permutation of the
+   * queue rather than a dice roll at every track, and "shuffle off" has to
+   * have somewhere to go back to.
+   */
+  let ordered = [];
   let index = -1;
   let shuffle = false;
   let repeat = 'all';
@@ -150,18 +162,26 @@ export function activate(ctx) {
     return scanning;
   }
 
-  /** Queue a set and start it, reporting what the model should say. */
-  function start(tracks, what) {
-    queue = tracks;
+  /** Put a set in the queue and start it, in order or drawn at random. */
+  function queueUp(tracks, wantsShuffle = false) {
+    shuffle = Boolean(wantsShuffle) && tracks.length > 1;
+    ordered = tracks;
+    queue = shuffle ? shuffled(tracks) : tracks;
     index = 0;
     cue();
-    const named = tracks.slice(0, NAMED_IN_FEEDBACK).map((track) => track.title).join(', ');
+    return queue[0];
+  }
+
+  /** Queue a set and start it, reporting what the model should say. */
+  function start(tracks, what, wantsShuffle = false) {
+    const first = queueUp(tracks, wantsShuffle);
+    const named = queue.slice(0, NAMED_IN_FEEDBACK).map((track) => track.title).join(', ');
     return {
       ok: true,
-      summary: `${tracks[0].title}${tracks.length > 1 ? ` (+${tracks.length - 1} queued)` : ''}`,
+      summary: `${first.title}${queue.length > 1 ? ` (+${queue.length - 1} queued${shuffle ? ', shuffled' : ''})` : ''}`,
       feedback:
-        `[MUSIC] Now playing "${tracks[0].title}"${tracks[0].artist ? ` by ${tracks[0].artist}` : ''}` +
-        `${tracks.length > 1 ? `, with ${tracks.length} track(s) queued: ${named}` : ''}. ` +
+        `[MUSIC] Now playing "${first.title}"${first.artist ? ` by ${first.artist}` : ''}` +
+        `${queue.length > 1 ? `, with ${queue.length} track(s) queued${shuffle ? ' in a random order' : ''}: ${named}` : ''}. ` +
         `That is what "${what}" resolved to. Say what is playing in one short sentence.`,
     };
   }
@@ -186,13 +206,9 @@ export function activate(ctx) {
 
   function step(delta) {
     if (queue.length === 0) return -1;
-    if (shuffle && queue.length > 1) {
-      // Never the track already playing: a shuffle that repeats the current
-      // song reads as a broken button rather than as chance.
-      let pick = index;
-      while (pick === index) pick = Math.floor(Math.random() * queue.length);
-      return pick;
-    }
+    // Shuffling is done once, to the queue itself, which leaves this the only
+    // place that says what "next" means — and means every track is heard once,
+    // "previous" goes back to what actually just played, and "3 of 47" is true.
     const next = index + delta;
     if (next >= queue.length) return repeat === 'off' ? -1 : 0;
     if (next < 0) return queue.length - 1;
@@ -203,8 +219,16 @@ export function activate(ctx) {
     const next = step(delta);
     if (next < 0) {
       queue = [];
+      ordered = [];
       index = -1;
       return audio.clear();
+    }
+    // Coming round again on a shuffled queue is a fresh draw. Replaying one
+    // permutation for ever is the cassette this was meant to be the end of.
+    if (shuffle && delta > 0 && next === 0 && queue.length > 1) {
+      const last = queue[index];
+      queue = shuffled(queue);
+      if (queue[0] === last) [queue[0], queue[queue.length - 1]] = [queue[queue.length - 1], queue[0]];
     }
     index = next;
     return cue();
@@ -222,6 +246,7 @@ export function activate(ctx) {
       if (command === 'ended') return repeat === 'one' ? cue() : advance(1);
       if (command === 'stop') {
         queue = [];
+        ordered = [];
         index = -1;
         return audio.clear();
       }
@@ -271,8 +296,10 @@ export function activate(ctx) {
       // only one who knows which they meant — so they get the list, with a
       // button on each line, and nothing starts playing until they press one.
       if (!wanted) {
-        // Nothing asked for means everything: that is not an ambiguity.
-        return start(hits, `everything — ${hits.length} track(s)`);
+        // Nothing asked for means everything: that is not an ambiguity. It is
+        // shuffled, because a whole library played from the top is a filing
+        // cabinet rather than a playlist.
+        return start(hits, `everything — ${hits.length} track(s)`, true);
       }
       if (hits.length === 1) return start(hits, hits[0].title);
 
@@ -309,9 +336,7 @@ export function activate(ctx) {
       const picked = offered.tracks[position];
       if (!picked) throw new Error('that list is no longer the current one');
 
-      queue = [picked, ...offered.tracks.filter((_, at) => at !== position)];
-      index = 0;
-      cue();
+      queueUp([picked, ...offered.tracks.filter((_, at) => at !== position)]);
       return { ok: true, summary: picked.title };
     },
   });
@@ -322,12 +347,14 @@ export function activate(ctx) {
       turn.status('Building a playlist…');
       const tracks = await ensureLibrary();
 
-      // `| shuffle` rather than looking for the word anywhere: a band called
-      // Random Order would otherwise be unplayable in order, and the model is
-      // told exactly what to write.
+      // After a `|` rather than anywhere in the words: a band called Random
+      // Order would otherwise be unplayable in order, and the model is told
+      // exactly what to write.
       const [rawQuery = '', ...modifiers] = String(steps ?? '').split('|');
       const wanted = rawQuery.trim();
-      const wantsShuffle = modifiers.some((modifier) => /shuffle|random/i.test(modifier));
+      const modifier = modifiers.join(' ');
+      const askedShuffle = /shuffle|random/i.test(modifier);
+      const askedOrder = /in ?order|ordered|alphabet|sequence/i.test(modifier);
 
       const hits = wanted ? search(tracks, wanted) : tracks;
       if (hits.length === 0) {
@@ -338,21 +365,25 @@ export function activate(ctx) {
         };
       }
 
-      shuffle = wantsShuffle;
-      // Shuffled means starting somewhere random too. Starting at track one and
-      // only then shuffling makes the same song open every "random" playlist.
-      const first = wantsShuffle ? Math.floor(Math.random() * hits.length) : 0;
-      queue = hits;
-      index = first;
-      cue();
+      // An album is the one playlist somebody else already put in an order, so
+      // it is played in that order. Everything else — a band, a genre, the
+      // whole library — is a pile of songs that `search` hands back ranked and
+      // then alphabetical, which is why the same request has been coming out in
+      // the same sequence every time, like a cassette. That pile is shuffled by
+      // default; only being asked for it in order keeps it as it came.
+      const record = albumOrder(hits);
+      const list = record ?? hits;
+      const wantsShuffle = askedShuffle || (!askedOrder && !record && list.length > 1);
 
-      const named = hits.slice(0, NAMED_IN_FEEDBACK).map((track) => track.title).join(', ');
+      const first = queueUp(list, wantsShuffle);
+      const named = queue.slice(0, NAMED_IN_FEEDBACK).map((track) => track.title).join(', ');
+      const how = shuffle ? ' in a random order' : record ? ' in album order' : '';
       return {
         ok: true,
-        summary: `${hits.length} track(s)${wantsShuffle ? ', shuffled' : ''} — now ${hits[first].title}`,
+        summary: `${queue.length} track(s)${shuffle ? ', shuffled' : ''} — now ${first.title}`,
         feedback:
-          `[MUSIC] Queued ${hits.length} track(s)${wantsShuffle ? ' in random order' : ''} for "${wanted || 'everything'}", ` +
-          `now playing "${hits[first].title}". It includes: ${named}${hits.length > NAMED_IN_FEEDBACK ? ', …' : ''}. ` +
+          `[MUSIC] Queued ${queue.length} track(s)${how} for "${wanted || 'everything'}", ` +
+          `now playing "${first.title}". It includes: ${named}${queue.length > NAMED_IN_FEEDBACK ? ', …' : ''}. ` +
           'Say how many are queued and what is playing, in one short sentence.',
       };
     },
@@ -382,12 +413,24 @@ export function activate(ctx) {
       }
       if (/^stop/.test(command)) {
         queue = [];
+        ordered = [];
         index = -1;
         audio.clear();
         return { ok: true, summary: 'stopped', feedback: '[MUSIC] Stopped, and the queue is empty. Say so briefly.' };
       }
       if (/^shuffle/.test(command)) {
         shuffle = !/off|no/.test(command);
+        // What is playing does not change because a mode was toggled: it keeps
+        // its place at the head of the redrawn queue, and switching back finds
+        // it again wherever it sits in the order the tracks were gathered in.
+        const current = queue[index];
+        if (current && shuffle) {
+          queue = [current, ...shuffled(queue.filter((track) => track !== current))];
+          index = 0;
+        } else if (current && ordered.length > 0) {
+          queue = ordered;
+          index = Math.max(0, queue.indexOf(current));
+        }
         cue({ play: false });
         audio.play();
         return { ok: true, summary: `shuffle ${shuffle ? 'on' : 'off'}`, feedback: `[MUSIC] Shuffle is ${shuffle ? 'on' : 'off'}. Say so briefly.` };
