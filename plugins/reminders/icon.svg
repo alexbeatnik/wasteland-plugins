@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none"
-     stroke="#ffb000" stroke-width="1.8" stroke-linecap="square">
-  <!-- A clock rather than a bell: the app tints icons through its own palette,
-       so open strokes survive the filter better than a filled glyph, and a bell
-       is mostly curve. The hands read as a time even at 1.1rem. -->
-  <circle cx="12" cy="12" r="8" />
-  <path d="M12 7v5l3.5 2" />
-</svg>
